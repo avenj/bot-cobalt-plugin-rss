@@ -214,15 +214,16 @@ configured contexts/channels.
   ---
   ## example etc/plugins/rss.conf
   Feeds:
-    URL: 'http://rss.slashdot.org/Slashdot/slashdot'
-    Delay: 300
-    AnnounceTo:
-      Main:
-        - '#eris'
-        - '#otw'
+    MyFeed:
+      URL: 'http://rss.slashdot.org/Slashdot/slashdot'
+      Delay: 300
+      AnnounceTo:
+        Main:
+          - '#eris'
+          - '#otw'
       
-      ParadoxIRC:
-        - '#perl'
+        ParadoxIRC:
+          - '#perl'
 
 =head1 AUTHOR
 
