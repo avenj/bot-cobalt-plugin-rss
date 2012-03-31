@@ -47,7 +47,7 @@ sub Cobalt_register {
         next FEED      
       }
       
-      my $delay = $feeds->{$feedname}->{Delay} || 180;
+      my $delay = $feeds->{$feedname}->{Delay} || 120;
       ## FEEDS{$feedname} = {
       ##   url   => ...
       ##   delay => ...
@@ -187,3 +187,47 @@ sub _feed {
 
 1;
 __END__
+
+=pod
+
+=head1 NAME
+
+Cobalt::Plugin::RSS - Monitor RSS feeds via IRC
+
+=head1 SYNOPSIS
+
+  ## In plugins.conf:
+  RSS:
+    Module: Cobalt::Plugin::RSS
+    Config: plugins/rss.conf
+
+  ## Requires properly configured rss.conf
+  !plugin load RSS
+
+=head1 DESCRIPTION
+
+Monitors an arbitrary number of RSS feeds, reporting new headlines to 
+configured contexts/channels.
+
+=head1 EXAMPLE CONF
+
+  ---
+  ## example etc/plugins/rss.conf
+  Feeds:
+    URL: 'http://rss.slashdot.org/Slashdot/slashdot'
+    Delay: 300
+    AnnounceTo:
+      Main:
+        - '#eris'
+        - '#otw'
+      
+      ParadoxIRC:
+        - '#perl'
+
+=head1 AUTHOR
+
+Jon Portnoy <avenj@cobaltirc.org>
+
+L<http://www.cobaltirc.org>
+
+=cut
