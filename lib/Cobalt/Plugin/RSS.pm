@@ -1,5 +1,5 @@
 package Cobalt::Plugin::RSS;
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 use Cobalt::Common;
 
@@ -26,7 +26,7 @@ sub Cobalt_register {
 
   my $feeds = $pcfg->{Feeds};
   
-  if ($feeds && ref $feeds eq 'HASH') {
+  if ($feeds && ref $feeds eq 'HASH' && keys %$feeds) {
     FEED: for my $feedname (keys %$feeds) {
     
       my $uri = $feeds->{$feedname}->{URL};

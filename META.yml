@@ -1,0 +1,25 @@
+---
+abstract: 'RSS feed monitor for Cobalt'
+author:
+  - 'Jon Portnoy <avenj@cobaltirc.org>'
+build_requires: {}
+configure_requires:
+  Module::Build: 0.38
+dynamic_config: 1
+generated_by: 'Module::Build version 0.38, CPAN::Meta::Converter version 2.112150'
+license: perl
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: Cobalt-Plugin-RSS
+provides:
+  Cobalt::Plugin::RSS:
+    file: lib/Cobalt/Plugin/RSS.pm
+    version: 0.03
+requires:
+  Cobalt::Core: 0
+  POE::Component::RSSAggregator: 0
+  perl: v5.12.1
+resources:
+  license: http://dev.perl.org/licenses/
+version: 0.03
