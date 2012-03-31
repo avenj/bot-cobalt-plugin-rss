@@ -165,7 +165,8 @@ sub _feed {
   
   HEAD: for my $headline ( $feed->late_breaking_news ) {
     my $this_line = $headline->headline;
-    my $this_headline = "$name: $this_line";
+    my $this_url  = $headline->url;
+    my $this_headline = "$name: $this_line ($this_url)";
 
     CONTEXT: for my $context (keys %$sendto) {
       my $irc = $core->get_irc_obj($context) || next CONTEXT;
