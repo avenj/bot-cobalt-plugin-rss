@@ -46,7 +46,7 @@ sub announce {
 }
 
 sub get_announce {
-  ## get_announce($name, $context)
+  ## get_announce($name [, $context ])
   ## get arrayref of channels for this feed/context
   my ($self, $feedname, $context) = @_;
   my $core = $self->core;
@@ -68,9 +68,17 @@ sub track {
   $p_heap->{$feedname} = {
     url   => $url,
     delay => $delay,
-    obj   => undef,
-    HasRun => 0,
   };
+  
+  ## Can create our XML::RSS:Feed now (requires proper hash above):
+  $p_heap->{obj} = $self->_create_feed($feedname);
+
+  ## add to timer pool
+  my $pool = $self->pending;
+  $pool->{$feedname} = {
+    LastRun => 0,
+  };
+
   return $feedname
 }
 
@@ -107,13 +115,17 @@ sub Cobalt_register {
       
       my $url = $thisfeed->{URL};
       unless ($url) {
-        ## FIXME warn
+        $core->log->warn(
+          "Could not add feed $feedname: missing URL directive",
+        );
         next FEED
       }
       
       my $annto = $thisfeed->{AnnounceTo};
       unless ($annto && ref $annto eq 'HASH') {
-        ## FIXME warn
+        $core->log->warn(
+          "Could not add feed $feedname: invalid AnnounceTo directive",
+        );
         next FEED
       }
       
@@ -125,7 +137,10 @@ sub Cobalt_register {
       CONTEXT: for my $context (keys %$annto) {
         my $thiscont = $annto->{$context};
         unless (ref $thiscont eq 'ARRAY') {
-          ## FIXME warn
+          $core->log->warn(
+            "Configured AnnounceTo directive not a list.",
+            "Check your configuration."
+          );
           next CONTEXT
         }
         
@@ -135,7 +150,11 @@ sub Cobalt_register {
         
     } ## FEED
   } else {
-    ## FIXME warn
+    $core->log->warn(
+      "There are no RSS feeds configured; doing nothing.",
+      "You may want to inspect this plugin's Config: file.",
+      "See perldoc Cobalt::Plugin::RSS",
+    );
   }
 
   $core->plugin_register( $self, 'SERVER', 
@@ -145,8 +164,11 @@ sub Cobalt_register {
     ],
   );
   
-  ## FIXME set up XML::RSS::Feed
-  ## FIXME kickstart timer pool
+  $core->timer_set( 6,
+    { Event => 'rssplug_check_timer_pool', },
+    'RSSPLUG_CHECK_POOL'
+  );
+
   $core->log->info("Loaded - $VERSION");  
   return PLUGIN_EAT_NONE
 }
@@ -163,8 +185,24 @@ sub Bot_rssplug_check_timer_pool {
   
   my $pool = $self->pending;
   
-  ## FIXME check timestamps on pool (keyed on name?)
+  ## check timestamps on pool (keyed on name)
   ## if ts is up, execute _request, schedule new
+  for my $feedname (keys %$pool) {
+    my $feedmeta  = $self->get_feed_meta($feedname);
+    my $thistimer = $pool->{$feedname};
+    my $lastts    = $thistimer->{LastRun} || 0;
+    my $delay     = $feedmeta->{delay};
+    
+    if (time - $lastts >= $delay) {
+      $self->_request($feedname);
+      $thistimer->{LastRun} = time;
+    }
+  }
+
+  $core->timer_set( 6,
+    { Event => 'rssplug_check_timer_pool', },
+    'RSSPLUG_CHECK_POOL'
+  );
     
   return PLUGIN_EAT_NONE
 }
@@ -178,20 +216,43 @@ sub Bot_rssplug_got_resp {
   if ($response->is_success) {
     my $feedmeta = $self->get_feed_meta($feedname);
     my $handler  = $feedmeta->{obj};
-    ## FIXME if no $handler, _create_feed and set init headlines ?
-    ## FIXME
+    
+    if ( $handler->parse($response->content) ) {
+      $self->_send_announce($feedname, $handler);
+    }
   } else {
-    ## FIXME warn
+    $core->log->warn(
+      "Unsuccessful HTTP request: $feedname: ".$response->status
+    );
     return PLUGIN_EAT_NONE
   }  
-  ## FIXME grab response
-  ##  grab name tag
-  ##  feed content to get_feed_meta($name)->{obj}->parse
-  ##  check HasRun? should be able to just handle it internally 
-  ##    (via XML::RSS::Feed)
-  ##  yield off messages (handler?)  
   
   return PLUGIN_EAT_NONE
+}
+
+sub _send_announce {
+  my ($self, $name, $handler) = @_;
+  my $core = $self->core;
+  
+  my $title = $handler->title;
+  
+  my $feedmeta = $self->get_feed_meta($name);
+  
+  my $a_heap = $self->get_announce($name);
+  
+  HEAD: for my $headline ( $handler->late_breaking_news ) {
+    my $this_line = $headline->headline;
+    my $this_url  = $headline->url;
+    my $this_headline = "$name: $this_line ( $this_url )";
+
+    CONTEXT: for my $context (keys %$a_heap) {
+      my $irc = $core->get_irc_object($context) || next CONTEXT;
+      $core->send_event( 'send_message', $context, $_,
+        color('bold', "RSS:")." $this_headline",
+      ) for @{$a_heap->{$context}};
+    } ## CONTEXT
+
+  } ## HEAD
 }
 
 sub _create_feed {
@@ -205,7 +266,15 @@ sub _create_feed {
   $feedmeta->{tmpdir} = File::Spec->tmpdir
     unless $feedmeta->{tmpdir};
     
-  if ( my $rss = XML::RSS::Feed->new(%$feedmeta) ) {
+  my %feedopts = (
+    name => $feedname,
+    url  => $feedmeta->{url},
+    delay  => $feedmeta->{delay},
+    tmpdir => File::Spec->tmpdir(),
+    init_headlines_seen => 1,
+  );
+  
+  if ( my $rss = XML::RSS::Feed->new(%feedopts) ) {
     $feedmeta->{obj} = $rss;
   } else {
     $core->log->warn(
@@ -240,3 +309,49 @@ sub _request {
 }
 
 1;
+__END__
+
+=pod
+
+=head1 NAME
+
+Cobalt::Plugin::RSS - Monitor RSS feeds via IRC
+
+=head1 SYNOPSIS
+
+  ## In plugins.conf:
+  RSS:
+    Module: Cobalt::Plugin::RSS
+    Config: plugins/rss.conf
+
+  ## Requires properly configured rss.conf
+  !plugin load RSS
+
+=head1 DESCRIPTION
+
+Monitors an arbitrary number of RSS feeds, reporting new headlines to
+configured contexts/channels.
+
+=head1 EXAMPLE CONF
+
+  ---
+  ## example etc/plugins/rss.conf
+  Feeds:
+    MyFeed:
+      URL: 'http://rss.slashdot.org/Slashdot/slashdot'
+      Delay: 300
+      AnnounceTo:
+        Main:
+          - '#eris'
+          - '#otw'
+
+        ParadoxIRC:
+          - '#perl'
+
+=head1 AUTHOR
+
+Jon Portnoy <avenj@cobaltirc.org>
+
+L<http://www.cobaltirc.org>
+
+=cut

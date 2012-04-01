@@ -7,7 +7,7 @@ use Cobalt::Common;
 
 use File::Spec;
 
-use POE qw/Component::RSSAggregator/;
+use XML::RSS::Feed;
 
 sub new { bless { }, shift }
 
@@ -70,6 +70,7 @@ sub Cobalt_register {
   my ($self, $core) = splice @_, 0, 2;
   $self->core($core);
   
+  ## FIXME move all this shit back to internals
   $core->State->{HEAP}->{RSSPLUG} = { ANN => {}, FEEDS => {} };
   
   my $pcfg = $core->get_plugin_cfg($self);
@@ -133,26 +134,18 @@ sub Cobalt_register {
     );
   }
 
-  POE::Session->create(
-    object_states => [
-      $self => [
-        '_start',
-        '_feed',
-      ],
-    ],
-  );
-  
   unless ($self->{RSSAGG}) {
     $core->log->emerg("No RSSAggregator instance?");
     croak "Could not initialize RSSAggregator"
   }
+
+  ## FIXME set up and kickstart delay pool
   
   my $count = $self->list_feed_names;
   $core->log->info("Loaded - $VERSION - watching $count feeds");
   $core->plugin_register( $self, 'SERVER',
     [
-#      'public_cmd_rssaddfeed',
-#      'public_cmd_rssdelfeed',
+      ## FIXME timer to check delay pool
     ],
   );
   return PLUGIN_EAT_NONE
@@ -166,39 +159,8 @@ sub Cobalt_unregister {
 }
 
 
-## POE
-
-sub _start {
-  my ($self, $kernel, $session) = @_[OBJECT, KERNEL, SESSION];
-  my $core = $self->core;
-  my $poe_alias = 'rssagg'.$core->get_plugin_alias($self);
-
-  $core->log->info("RSS handler session started");
-
-  $self->{RSSAGG} = POE::Component::RSSAggregator->new(
-    alias => $poe_alias,
-    callback => $session->postback("_feed"),
-    tmpdir => File::Spec->tmpdir(),
-  );
-
-  for my $feedname ($self->list_feed_names) {
-    my $thisfeed = $self->get_feed_meta($feedname);
-    my $delay = $thisfeed->{delay};
-    my $url   = $thisfeed->{url};
-    
-    $core->log->info("session: added $feedname ($url)");
-    
-    $kernel->post($poe_alias, 'add_feed', 
-      {
-        name  => $feedname,
-        delay => $delay,
-        url   => $url,
-      },
-    );
-  }
-}
-
 sub _feed {
+  ## FIXME convert to operate on responses
   my ($self, $kernel, $session) = @_[OBJECT, KERNEL, SESSION];
   my $core = $self->core;
 
