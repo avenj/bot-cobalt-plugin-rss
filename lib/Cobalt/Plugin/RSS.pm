@@ -30,8 +30,8 @@ sub get_ann_hash {
   my ($self, $feedname) = @_;
   my $core = $self->core;
   return unless $feedname;
-  my $announceheap = $core->State->{HEAP}->{RSSPLUG}->{ANN};
-  return $announceheap->{$feedname}
+  my $announceh = $core->State->{HEAP}->{RSSPLUG}->{ANN}->{$feedname};
+  return $announceh
 }
 
 sub track {
@@ -41,7 +41,7 @@ sub track {
   $delay = 120 unless $delay;
   my $pheap = $core->State->{HEAP}->{RSSPLUG};
   return if exists $pheap->{FEEDS}->{$feedname};
-  $self->{FEEDS}->{$feedname} = {
+  $pheap->{FEEDS}->{$feedname} = {
     url    => $url,
     delay  => $delay,
     HasRun => 0,
@@ -53,25 +53,30 @@ sub list_feed_names {
   my ($self) = @_;
   my $core = $self->core;
   my $pheap = $core->State->{HEAP}->{RSSPLUG};
-  return (keys %{$pheap->{FEEDS}})
+  my @feeds = keys %{$pheap->{FEEDS}};
+  return @feeds
 }
 
 sub get_feed_meta {
   my ($self, $feedname) = @_;
+  return unless $feedname;
   my $core = $self->core;
   my $pheap = $core->State->{HEAP}->{RSSPLUG};
-  return $pheap->{FEEDS}->{$feedname};
+  my $item = $pheap->{FEEDS}->{$feedname};
+  return $item
 }
 
 sub Cobalt_register {
   my ($self, $core) = splice @_, 0, 2;
   $self->core($core);
   
+  $core->State->{HEAP}->{RSSPLUG} = { ANN => {}, FEEDS => {} };
+  
   my $pcfg = $core->get_plugin_cfg($self);
 
   my $feeds = $pcfg->{Feeds};
   
-  $core->log->info( Dumper $feeds );
+#  $core->log->info( Dumper $feeds );
   
   if ($feeds && ref $feeds eq 'HASH' && keys %$feeds) {
     FEED: for my $feedname (keys %$feeds) {
@@ -144,12 +149,12 @@ sub Cobalt_register {
   
   my $count = $self->list_feed_names;
   $core->log->info("Loaded - $VERSION - watching $count feeds");
-#  $core->plugin_register( $self, 'SERVER',
-#    [
+  $core->plugin_register( $self, 'SERVER',
+    [
 #      'public_cmd_rssaddfeed',
 #      'public_cmd_rssdelfeed',
-#    ],
-#  );
+    ],
+  );
   return PLUGIN_EAT_NONE
 }
 
@@ -178,8 +183,11 @@ sub _start {
 
   for my $feedname ($self->list_feed_names) {
     my $thisfeed = $self->get_feed_meta($feedname);
-    my $delay = $thisfeed->{delay} // next;
-    my $url   = $thisfeed->{url}   // next;
+    my $delay = $thisfeed->{delay};
+    my $url   = $thisfeed->{url};
+    
+    $core->log->info("session: added $feedname ($url)");
+    
     $kernel->post($poe_alias, 'add_feed', 
       {
         name  => $feedname,
@@ -192,7 +200,6 @@ sub _start {
 
 sub _feed {
   my ($self, $kernel, $session) = @_[OBJECT, KERNEL, SESSION];
-  my $heap = $_[HEAP];
   my $core = $self->core;
 
   my $feed  = $_[ARG1]->[0];
