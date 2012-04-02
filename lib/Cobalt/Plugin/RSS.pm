@@ -354,6 +354,8 @@ Cobalt::Plugin::RSS - Monitor RSS feeds via IRC
 Monitors an arbitrary number of RSS feeds, reporting new headlines to
 configured contexts/channels.
 
+Uses L<XML::RSS::Feed>
+
 =head1 EXAMPLE CONF
 
   ---
@@ -362,8 +364,8 @@ configured contexts/channels.
     MyFeed:
       URL: 'http://rss.slashdot.org/Slashdot/slashdot'
       Delay: 300
-      ## If your feed publishes a lot in one go, add delays:
-      Spaced: 10
+      ## If your feed publishes a lot in one go, add delays (sec):
+      Spaced: 30
       AnnounceTo:
         Main:
           - '#eris'
