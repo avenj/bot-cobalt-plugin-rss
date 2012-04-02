@@ -258,11 +258,12 @@ sub _send_announce {
   HEAD: for my $headline ( $handler->late_breaking_news ) {
     my $this_line = $headline->headline;
     my $this_url  = $headline->url;
-    my $this_headline = "$name: $this_line ( $this_url )";
+    my $str = "RSS: "
+            .color('bold', $name)
+            .": $this_line ( $this_url )" ;
 
     CONTEXT: for my $context (keys %$a_heap) {
       my $irc = $core->get_irc_object($context) || next CONTEXT;
-      my $str = color('bold', "RSS:")." $this_headline";
       $core->timer_set( 1 + $spcount,
         {
          Type => 'msg',
