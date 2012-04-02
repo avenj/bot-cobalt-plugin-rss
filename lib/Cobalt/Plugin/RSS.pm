@@ -171,8 +171,8 @@ sub Cobalt_register {
     { Event => 'rssplug_check_timer_pool', },
     'RSSPLUG_CHECK_POOL'
   );
-
-  $core->log->info("Loaded - $VERSION");  
+  my $count = $self->list_feed_names;
+  $core->log->info("Loaded - $VERSION - watching $count feeds");  
   return PLUGIN_EAT_NONE
 }
   
