@@ -59,15 +59,18 @@ sub get_announce {
 sub track {
   ## track($name, $url, $delay)
   ## add new feed to {FEEDS}
-  my ($self, $feedname, $url, $delay) = @_;
+  my ($self, $feedname, $url, $delay, $spacing) = @_;
   my $core = $self->core;
   return unless $feedname and $url;
   $delay = 120 unless $delay;
+  $spacing = 5 unless $spacing;
   my $p_heap = $self->{HEAP}->{FEEDS};
   return if exists $p_heap->{$feedname};
   $p_heap->{$feedname} = {
+    hasrun => 0,
     url   => $url,
     delay => $delay,
+    space => $spacing,
   };
   
   ## Can create our XML::RSS:Feed now (requires proper hash above):
@@ -130,8 +133,8 @@ sub Cobalt_register {
       }
       
       my $delay = $thisfeed->{Delay} || 120;
-      
-      $self->track($feedname, $url, $delay)
+      my $spacing = $thisfeed->{Spaced} || 5;
+      $self->track($feedname, $url, $delay, $spacing)
         or $core->log->warn("Could not add $feedname: track() failed");
         
       CONTEXT: for my $context (keys %$annto) {
@@ -239,7 +242,17 @@ sub _send_announce {
   my $feedmeta = $self->get_feed_meta($name);
   
   my $a_heap = $self->get_announce($name);
-  
+
+  unless ($feedmeta->{hasrun}) {
+    $feedmeta->{hasrun} = 1;
+    $handler->init_headlines_seen(1);
+    ## for some reason init_headlines_seen sometimes fails ...
+    (undef) = $handler->late_breaking_news;
+    return
+  }
+
+  my $spacing = $feedmeta->{space};
+  my $spcount = 0;
   HEAD: for my $headline ( $handler->late_breaking_news ) {
     my $this_line = $headline->headline;
     my $this_url  = $headline->url;
@@ -247,11 +260,17 @@ sub _send_announce {
 
     CONTEXT: for my $context (keys %$a_heap) {
       my $irc = $core->get_irc_object($context) || next CONTEXT;
-      $core->send_event( 'send_message', $context, $_,
-        color('bold', "RSS:")." $this_headline",
+      my $str = color('bold', "RSS:")." $this_headline";
+      $core->timer_set( 1 + $spcount,
+        {
+         Type => 'msg',
+         Context => $context,
+         Target  => $_,
+         Text    => $str,
+        },
       ) for @{$a_heap->{$context}};
     } ## CONTEXT
-
+    $spcount += $spacing;
   } ## HEAD
 }
 
@@ -271,7 +290,7 @@ sub _create_feed {
     url  => $feedmeta->{url},
     delay  => $feedmeta->{delay},
     tmpdir => File::Spec->tmpdir(),
-    init_headlines_seen => 1,
+    init_headlines_seen => 0,
   );
   
   if ( my $rss = XML::RSS::Feed->new(%feedopts) ) {
@@ -340,6 +359,8 @@ configured contexts/channels.
     MyFeed:
       URL: 'http://rss.slashdot.org/Slashdot/slashdot'
       Delay: 300
+      ## If your feed publishes a lot in one go, add delays:
+      Spaced: 10
       AnnounceTo:
         Main:
           - '#eris'

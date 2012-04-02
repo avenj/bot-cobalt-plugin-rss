@@ -11,10 +11,11 @@ my $build = Module::Build->new(
   
   requires => {
     'perl' => '5.12.1',
+    'File::Spec' => 0,
     
     'Cobalt::Core' => 0,
-    
-    'POE::Component::RSSAggregator' => 0,
+
+    'XML::RSS::Feed' => 0,    
   },
   
 );
