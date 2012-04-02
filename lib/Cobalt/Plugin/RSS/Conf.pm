@@ -1,7 +1,7 @@
 package Cobalt::Plugin::RSS::Conf;
 our $VERSION = '0.1';
 
-sub conf { my $cf = <DATA>; return $cf }
+sub conf { local $/; my $cf = <DATA>; return $cf }
 
 __DATA__
 ---
