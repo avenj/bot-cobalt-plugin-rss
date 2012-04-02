@@ -1,5 +1,5 @@
 package Cobalt::Plugin::RSS;
-our $VERSION = '0.06';
+our $VERSION = '0.08';
 
 use Cobalt::Common;
 
@@ -191,7 +191,8 @@ sub Bot_rssplug_check_timer_pool {
   ## check timestamps on pool (keyed on name)
   ## if ts is up, execute _request, schedule new
   for my $feedname (keys %$pool) {
-    my $feedmeta  = $self->get_feed_meta($feedname);
+    my $feedmeta  = $self->get_feed_meta($feedname)
+                    || return PLUGIN_EAT_NONE;
     my $thistimer = $pool->{$feedname};
     my $lastts    = $thistimer->{LastRun} || 0;
     my $delay     = $feedmeta->{delay};
@@ -217,7 +218,8 @@ sub Bot_rssplug_got_resp {
   my ($feedname) = @$args;
 
   if ($response->is_success) {
-    my $feedmeta = $self->get_feed_meta($feedname);
+    my $feedmeta = $self->get_feed_meta($feedname)
+                   || return PLUGIN_EAT_NONE;
     my $handler  = $feedmeta->{obj};
     
     if ( $handler->parse($response->content) ) {
