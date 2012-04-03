@@ -15,11 +15,15 @@ name: Cobalt-Plugin-RSS
 provides:
   Cobalt::Plugin::RSS:
     file: lib/Cobalt/Plugin/RSS.pm
-    version: 0.03
+    version: 0.091
+  Cobalt::Plugin::RSS::Conf:
+    file: lib/Cobalt/Plugin/RSS/Conf.pm
+    version: 0.1
 requires:
   Cobalt::Core: 0
-  POE::Component::RSSAggregator: 0
+  File::Spec: 0
+  XML::RSS::Feed: 0
   perl: v5.12.1
 resources:
   license: http://dev.perl.org/licenses/
-version: 0.03
+version: 0.091
