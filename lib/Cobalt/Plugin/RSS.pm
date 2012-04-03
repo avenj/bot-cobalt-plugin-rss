@@ -1,5 +1,5 @@
 package Cobalt::Plugin::RSS;
-our $VERSION = '0.08';
+our $VERSION = '0.091';
 
 use Cobalt::Common;
 
@@ -10,6 +10,7 @@ use XML::RSS::Feed;
 sub new {
   my $class = shift;
   my $self  = {
+    MSGTIMERS => {},
     HEAP => {
       POOL  => {},
       ANN   => {},
@@ -162,6 +163,7 @@ sub Cobalt_register {
 
   $core->plugin_register( $self, 'SERVER', 
     [
+      'executed_timer',
       'rssplug_check_timer_pool',
       'rssplug_got_resp',
     ],
@@ -179,7 +181,15 @@ sub Cobalt_register {
 
 sub Cobalt_unregister {
   my ($self, $core) = splice @_, 0, 2;
+  $core->timer_del($_) for keys %{$self->{MSGTIMERS}};
   $core->log->info("Unloaded");
+  return PLUGIN_EAT_NONE
+}
+
+sub Bot_executed_timer {
+  my ($self, $core) = splice @_, 0, 2;
+  my $id = ${ $_[0] };
+  delete $self->{MSGTIMERS}->{$id};
   return PLUGIN_EAT_NONE
 }
 
@@ -264,16 +274,22 @@ sub _send_announce {
 
     CONTEXT: for my $context (keys %$a_heap) {
       my $irc = $core->get_irc_object($context) || next CONTEXT;
-      $core->timer_set( 1 + $spcount,
-        {
-         Type => 'msg',
-         Context => $context,
-         Target  => $_,
-         Text    => $str,
-        },
-      ) for @{$a_heap->{$context}};
+      CHAN: for my $channel ( @{ $a_heap->{$context} } ) {
+        my $tid = $core->timer_set( 1 + $spcount,
+          {
+           Type => 'msg',
+           Context => $context,
+           Target  => $channel,
+           Text    => $str,
+          },
+        );
+        $self->{MSGTIMERS}->{$tid} = $name;
+      } ## CHAN
+
     } ## CONTEXT
+
     $spcount += $spacing;
+
   } ## HEAD
 }
 

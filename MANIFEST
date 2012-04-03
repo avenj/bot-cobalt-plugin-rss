@@ -1,6 +1,6 @@
 Build.PL
 lib/Cobalt/Plugin/RSS.pm
-lib/Cobalt/PluginConfs/rss.conf
+lib/Cobalt/Plugin/RSS/Conf.pm
 MANIFEST			This list of files
 t/01_loadable.t
 Makefile.PL
