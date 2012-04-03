@@ -1,5 +1,5 @@
 package Cobalt::Plugin::RSS;
-our $VERSION = '0.091';
+our $VERSION = '0.092';
 
 use Cobalt::Common;
 
@@ -169,9 +169,8 @@ sub Cobalt_register {
     ],
   );
   
-  $core->timer_set( 6,
-    { Event => 'rssplug_check_timer_pool', },
-    'RSSPLUG_CHECK_POOL'
+  $self->{POOLTIMERID} = $core->timer_set( 6, 
+    { Event => 'rssplug_check_timer_pool' }
   );
   my $count = $self->list_feed_names;
   $core->log->info("Loaded - $VERSION - watching $count feeds");  
@@ -181,7 +180,9 @@ sub Cobalt_register {
 
 sub Cobalt_unregister {
   my ($self, $core) = splice @_, 0, 2;
+  $core->timer_del($self->{POOLTIMERID});
   $core->timer_del($_) for keys %{$self->{MSGTIMERS}};
+  delete $self->{HEAP};
   $core->log->info("Unloaded");
   return PLUGIN_EAT_NONE
 }
@@ -213,9 +214,8 @@ sub Bot_rssplug_check_timer_pool {
     }
   }
 
-  $core->timer_set( 6,
-    { Event => 'rssplug_check_timer_pool', },
-    'RSSPLUG_CHECK_POOL'
+  $self->{POOLTIMERID} = $core->timer_set( 6, 
+    { Event => 'rssplug_check_timer_pool' }
   );
     
   return PLUGIN_EAT_NONE
@@ -259,7 +259,7 @@ sub _send_announce {
     $feedmeta->{hasrun} = 1;
     $handler->init_headlines_seen(1);
     ## for some reason init_headlines_seen sometimes fails ...
-    (undef) = $handler->late_breaking_news;
+    () = $handler->late_breaking_news;
     return
   }
 
@@ -274,7 +274,8 @@ sub _send_announce {
 
     CONTEXT: for my $context (keys %$a_heap) {
       my $irc = $core->get_irc_object($context) || next CONTEXT;
-      CHAN: for my $channel ( @{ $a_heap->{$context} } ) {
+      
+      for my $channel ( @{ $a_heap->{$context} } ) {
         my $tid = $core->timer_set( 1 + $spcount,
           {
            Type => 'msg',
@@ -284,7 +285,7 @@ sub _send_announce {
           },
         );
         $self->{MSGTIMERS}->{$tid} = $name;
-      } ## CHAN
+      }
 
     } ## CONTEXT
 
