@@ -1,6 +1,7 @@
 package Cobalt::Plugin::RSS;
 our $VERSION = '0.092';
 
+use 5.12.1;
 use Cobalt::Common;
 
 use File::Spec;
