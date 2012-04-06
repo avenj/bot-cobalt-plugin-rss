@@ -1,5 +1,5 @@
 package Cobalt::Plugin::RSS;
-our $VERSION = '0.092';
+our $VERSION = '0.093';
 
 use 5.12.1;
 use Cobalt::Common;
@@ -307,8 +307,10 @@ sub _create_feed {
     name => $feedname,
     url  => $feedmeta->{url},
     delay  => $feedmeta->{delay},
-#    tmpdir => File::Spec->tmpdir(),
     init_headlines_seen => 0,
+
+    ## tmpdir caching seems to result in memory leaks:
+    # tmpdir => File::Spec->tmpdir(),
   );
   
   if ( my $rss = XML::RSS::Feed->new(%feedopts) ) {
@@ -369,7 +371,7 @@ Cobalt::Plugin::RSS - Monitor RSS feeds via IRC
 Monitors an arbitrary number of RSS feeds, reporting new headlines to
 configured contexts/channels.
 
-Uses L<XML::RSS::Feed>
+Uses L<XML::RSS::Feed> to track and parse feeds.
 
 =head1 EXAMPLE CONF
 

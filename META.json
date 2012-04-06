@@ -31,7 +31,7 @@
    "provides" : {
       "Cobalt::Plugin::RSS" : {
          "file" : "lib/Cobalt/Plugin/RSS.pm",
-         "version" : "0.091"
+         "version" : "0.093"
       },
       "Cobalt::Plugin::RSS::Conf" : {
          "file" : "lib/Cobalt/Plugin/RSS/Conf.pm",
@@ -44,5 +44,5 @@
          "http://dev.perl.org/licenses/"
       ]
    },
-   "version" : "0.091"
+   "version" : "0.093"
 }

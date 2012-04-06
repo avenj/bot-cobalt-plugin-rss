@@ -6,3 +6,4 @@ t/01_loadable.t
 Makefile.PL
 META.yml
 META.json
+README
