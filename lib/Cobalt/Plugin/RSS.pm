@@ -303,14 +303,11 @@ sub _create_feed {
 
   my $feedmeta = $self->get_feed_meta($feedname);
 
-  $feedmeta->{tmpdir} = File::Spec->tmpdir
-    unless $feedmeta->{tmpdir};
-    
   my %feedopts = (
     name => $feedname,
     url  => $feedmeta->{url},
     delay  => $feedmeta->{delay},
-    tmpdir => File::Spec->tmpdir(),
+#    tmpdir => File::Spec->tmpdir(),
     init_headlines_seen => 0,
   );
   
