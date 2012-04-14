@@ -266,7 +266,8 @@ sub _send_announce {
 
   my $spacing = $feedmeta->{space};
   my $spcount = 0;
-  HEAD: for my $headline ( $handler->late_breaking_news ) {
+  my @headlines = $handler->late_breaking_news;
+  HEAD: while (my $headline = pop @headlines) {
     my $this_line = $headline->headline;
     my $this_url  = $headline->url;
     my $str = "RSS: "
