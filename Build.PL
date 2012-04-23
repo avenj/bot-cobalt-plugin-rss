@@ -12,7 +12,7 @@ my $build = Module::Build->new(
   create_readme => 1,
   
   requires => {
-    'perl' => '5.12.1',
+    'perl' => '5.10.1',
     'File::Spec' => 0,
     
     'Cobalt::Core' => 0,
