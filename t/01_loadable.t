@@ -1,7 +1,7 @@
 use Test::More tests => 3;
 
 BEGIN {
-  use_ok( 'Cobalt::Plugin::RSS' );
+  use_ok( 'Bot::Cobalt::Plugin::RSS' );
 }
-new_ok( 'Cobalt::Plugin::RSS' );
-can_ok( 'Cobalt::Plugin::RSS', 'Cobalt_register', 'Cobalt_unregister' );
+new_ok( 'Bot::Cobalt::Plugin::RSS' );
+can_ok( 'Bot::Cobalt::Plugin::RSS', 'Cobalt_register', 'Cobalt_unregister' );

@@ -1,8 +1,8 @@
-package Cobalt::Plugin::RSS;
+package Bot::Cobalt::Plugin::RSS;
 our $VERSION = '0.093';
 
 use 5.10.1;
-use Cobalt::Common;
+use Bot::Cobalt::Common;
 
 use File::Spec;
 
@@ -158,7 +158,7 @@ sub Cobalt_register {
     $core->log->warn(
       "There are no RSS feeds configured; doing nothing.",
       "You may want to inspect this plugin's Config: file.",
-      "See perldoc Cobalt::Plugin::RSS",
+      "See perldoc Bot::Cobalt::Plugin::RSS",
     );
   }
 
@@ -332,7 +332,7 @@ sub _request {
   my $feedmeta = $self->get_feed_meta($feedname);
   
   unless ($core->Provided->{www_request}) {
-    $core->log->warn("You seem to be missing Cobalt::Plugin::WWW!");
+    $core->log->warn("You seem to be missing Bot::Cobalt::Plugin::WWW!");
     return PLUGIN_EAT_NONE
   }
 
@@ -355,13 +355,13 @@ __END__
 
 =head1 NAME
 
-Cobalt::Plugin::RSS - Monitor RSS feeds via IRC
+Bot::Cobalt::Plugin::RSS - Monitor RSS feeds via IRC
 
 =head1 SYNOPSIS
 
   ## In plugins.conf:
   RSS:
-    Module: Cobalt::Plugin::RSS
+    Module: Bot::Cobalt::Plugin::RSS
     Config: plugins/rss.conf
 
   ## Requires properly configured rss.conf

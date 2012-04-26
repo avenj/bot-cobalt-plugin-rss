@@ -1,11 +1,11 @@
-package Cobalt::Plugin::RSS::Conf;
+package Bot::Cobalt::Plugin::RSS::Conf;
 our $VERSION = '0.1';
 
 sub conf { local $/; my $cf = <DATA>; return $cf }
 
 __DATA__
 ---
-## Cobalt::Plugin::RSS plugin configuration
+## Bot::Cobalt::Plugin::RSS plugin configuration
 
 Feeds:
 

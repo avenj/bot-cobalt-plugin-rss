@@ -1,9 +1,9 @@
 Build.PL
-lib/Cobalt/Plugin/RSS.pm
-lib/Cobalt/Plugin/RSS/Conf.pm
-MANIFEST			This list of files
-t/01_loadable.t
+lib/Bot/Cobalt/Plugin/RSS.pm
+lib/Bot/Cobalt/Plugin/RSS/Conf.pm
 Makefile.PL
-META.yml
+MANIFEST			This list of files
 META.json
+META.yml
 README
+t/01_loadable.t

@@ -1,7 +1,7 @@
 use strict; use warnings;
 use Module::Build;
 my $build = Module::Build->new(
-  module_name => "Cobalt::Plugin::RSS",
+  module_name => "Bot::Cobalt::Plugin::RSS",
   dist_abstract => "RSS feed monitor for Cobalt",
   dist_author => 'Jon Portnoy <avenj@cobaltirc.org>',
   
@@ -15,7 +15,7 @@ my $build = Module::Build->new(
     'perl' => '5.10.1',
     'File::Spec' => 0,
     
-    'Cobalt::Core' => 0,
+    'Bot::Cobalt::Core' => 0,
 
     'XML::RSS::Feed' => 0,    
   },
