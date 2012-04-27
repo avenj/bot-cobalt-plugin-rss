@@ -1,7 +1,8 @@
 package Bot::Cobalt::Plugin::RSS;
-our $VERSION = '0.093';
+our $VERSION = '0.02';
 
 use 5.10.1;
+
 use Bot::Cobalt::Common;
 
 use File::Spec;
@@ -18,8 +19,8 @@ sub new {
       FEEDS => {},
     },
   };
-  
   bless $self, $class;
+  
   return $self
 }
 
@@ -215,7 +216,7 @@ sub Bot_rssplug_check_timer_pool {
     }
   }
 
-  $self->{POOLTIMERID} = $core->timer_set( 6, 
+  $self->{POOLTIMERID} = $core->timer_set( 3, 
     { Event => 'rssplug_check_timer_pool' }
   );
     
