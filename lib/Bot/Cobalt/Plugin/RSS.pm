@@ -1,8 +1,9 @@
 package Bot::Cobalt::Plugin::RSS;
-our $VERSION = '0.02';
+our $VERSION = '0.001';
 
 use 5.10.1;
 
+use Bot::Cobalt;
 use Bot::Cobalt::Common;
 
 use File::Spec;
@@ -24,27 +25,19 @@ sub new {
   return $self
 }
 
-sub core {
-  my ($self, $core) = @_;
-  return $self->{CORE} = $core if $core and ref $core;
-  return $self->{CORE}
-}
 
-sub pending {
-  ## pending()
-  ## get timer pool
-  my ($self) = @_;
-  return $self->{HEAP}->{POOL};
-}
+sub pending {  $_[0]->{HEAP}->{POOL} }
 
 sub announce {
   ## announce($name, $context, $channel)
   ## add new announce for feed/context/channel
   my ($self, $feedname, $context, $channel) = @_;
-  my $core = $self->core;
   return unless $feedname and $context and $channel;
+
   my $a_heap = $self->{HEAP}->{ANN};
+
   push(@{$a_heap->{$feedname}->{$context}}, $channel);
+
   return $channel
 }
 
@@ -52,9 +45,10 @@ sub get_announce {
   ## get_announce($name [, $context ])
   ## get arrayref of channels for this feed/context
   my ($self, $feedname, $context) = @_;
-  my $core = $self->core;
   return unless $feedname;
+
   my $a_heap = $self->{HEAP}->{ANN};
+
   return $a_heap->{$feedname}->{$context} if $context;
   return $a_heap->{$feedname}
 }
@@ -63,12 +57,15 @@ sub track {
   ## track($name, $url, $delay)
   ## add new feed to {FEEDS}
   my ($self, $feedname, $url, $delay, $spacing) = @_;
-  my $core = $self->core;
   return unless $feedname and $url;
+
   $delay = 120 unless $delay;
   $spacing = 5 unless $spacing;
+
   my $p_heap = $self->{HEAP}->{FEEDS};
+
   return if exists $p_heap->{$feedname};
+
   $p_heap->{$feedname} = {
     hasrun => 0,
     url   => $url,
@@ -92,10 +89,9 @@ sub list_feed_names {
   ## list_feed_names()
   ## returns list of {FEEDS} keys
   my ($self) = @_;
-  my $core = $self->core;
+
   my $p_heap = $self->{HEAP}->{FEEDS};
-  my @feeds = keys %$p_heap;
-  return @feeds
+  return keys(%$p_heap)
 }
 
 sub get_feed_meta {
@@ -103,14 +99,12 @@ sub get_feed_meta {
   ## returns {FEEDS} element w/ url and delay
   my ($self, $feedname) = @_;
   return unless $feedname;
-  my $core = $self->core;
-  my $p_heap = $self->{HEAP}->{FEEDS};
-  return $p_heap->{$feedname}
+
+  return $self->{HEAP}->{FEEDS}->{$feedname}
 }
 
 sub Cobalt_register {
   my ($self, $core) = splice @_, 0, 2;
-  $self->core($core);
 
   my $pcfg = $core->get_plugin_cfg($self);
   my $feeds = $pcfg->{Feeds};
@@ -121,7 +115,7 @@ sub Cobalt_register {
       
       my $url = $thisfeed->{URL};
       unless ($url) {
-        $core->log->warn(
+        logger->warn(
           "Could not add feed $feedname: missing URL directive",
         );
         next FEED
@@ -129,7 +123,7 @@ sub Cobalt_register {
       
       my $annto = $thisfeed->{AnnounceTo};
       unless ($annto && ref $annto eq 'HASH') {
-        $core->log->warn(
+        logger->warn(
           "Could not add feed $feedname: invalid AnnounceTo directive",
         );
         next FEED
@@ -138,12 +132,12 @@ sub Cobalt_register {
       my $delay = $thisfeed->{Delay} || 120;
       my $spacing = $thisfeed->{Spaced} || 5;
       $self->track($feedname, $url, $delay, $spacing)
-        or $core->log->warn("Could not add $feedname: track() failed");
+        or logger->warn("Could not add $feedname: track() failed");
         
       CONTEXT: for my $context (keys %$annto) {
         my $thiscont = $annto->{$context};
         unless (ref $thiscont eq 'ARRAY') {
-          $core->log->warn(
+          logger->warn(
             "Configured AnnounceTo directive not a list.",
             "Check your configuration."
           );
@@ -156,14 +150,14 @@ sub Cobalt_register {
         
     } ## FEED
   } else {
-    $core->log->warn(
+    logger->warn(
       "There are no RSS feeds configured; doing nothing.",
       "You may want to inspect this plugin's Config: file.",
       "See perldoc Bot::Cobalt::Plugin::RSS",
     );
   }
 
-  $core->plugin_register( $self, 'SERVER', 
+  register( $self, 'SERVER', 
     [
       'executed_timer',
       'rssplug_check_timer_pool',
@@ -174,18 +168,24 @@ sub Cobalt_register {
   $self->{POOLTIMERID} = $core->timer_set( 6, 
     { Event => 'rssplug_check_timer_pool' }
   );
+  
   my $count = $self->list_feed_names;
-  $core->log->info("Loaded - $VERSION - watching $count feeds");  
+  logger->info("Loaded - $VERSION - watching $count feeds");  
+  
   return PLUGIN_EAT_NONE
 }
   
 
 sub Cobalt_unregister {
   my ($self, $core) = splice @_, 0, 2;
+  
   $core->timer_del($self->{POOLTIMERID});
   $core->timer_del($_) for keys %{$self->{MSGTIMERS}};
+  
   delete $self->{HEAP};
-  $core->log->info("Unloaded");
+  
+  logger->info("Unloaded");
+  
   return PLUGIN_EAT_NONE
 }
 
@@ -238,7 +238,7 @@ sub Bot_rssplug_got_resp {
       $self->_send_announce($feedname, $handler);
     }
   } else {
-    $core->log->warn(
+    logger->warn(
       "Unsuccessful HTTP request: $feedname: ".$response->status
     );
     return PLUGIN_EAT_NONE
@@ -249,7 +249,6 @@ sub Bot_rssplug_got_resp {
 
 sub _send_announce {
   my ($self, $name, $handler) = @_;
-  my $core = $self->core;
   
   my $title = $handler->title;
   
@@ -276,10 +275,10 @@ sub _send_announce {
             .": $this_line ( $this_url )" ;
 
     CONTEXT: for my $context (keys %$a_heap) {
-      my $irc = $core->get_irc_object($context) || next CONTEXT;
+      my $irc = irc_object($context) || next CONTEXT;
       
       for my $channel ( @{ $a_heap->{$context} } ) {
-        my $tid = $core->timer_set( 1 + $spcount,
+        my $tid = core()->timer_set( 1 + $spcount,
           {
            Type => 'msg',
            Context => $context,
@@ -301,7 +300,6 @@ sub _create_feed {
   ## _create_feed($name)
   ## create (and return) new XML::RSS::Feed based on get_feed_meta
   my ($self, $feedname) = @_;
-  my $core = $self->core;
 
   my $feedmeta = $self->get_feed_meta($feedname);
 
@@ -318,7 +316,7 @@ sub _create_feed {
   if ( my $rss = XML::RSS::Feed->new(%feedopts) ) {
     $feedmeta->{obj} = $rss;
   } else {
-    $core->log->warn(
+    logger->warn(
       "Could not create XML::RSS::Feed obj for $feedname"
     );
   }
@@ -328,19 +326,18 @@ sub _create_feed {
 
 sub _request {
   my ($self, $feedname) = @_;
-  my $core = $self->core;
 
   my $feedmeta = $self->get_feed_meta($feedname);
   
-  unless ($core->Provided->{www_request}) {
-    $core->log->warn("You seem to be missing Bot::Cobalt::Plugin::WWW!");
+  unless (core()->Provided->{www_request}) {
+    logger->warn("You seem to be missing Bot::Cobalt::Plugin::WWW!");
     return PLUGIN_EAT_NONE
   }
 
   ## send request tagged w/ feedname  
   my $url = $feedmeta->{url};
   my $req = HTTP::Request->new( 'GET', $url );
-  $core->send_event( 'www_request',
+  broadcast( 'www_request',
     $req,
     'rssplug_got_resp',
     [ $feedname ],

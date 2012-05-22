@@ -1,5 +1,4 @@
 package Bot::Cobalt::Plugin::RSS::Conf;
-our $VERSION = '0.1';
 
 sub conf { local $/; my $cf = <DATA>; return $cf }
 

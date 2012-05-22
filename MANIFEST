@@ -1,4 +1,5 @@
 Build.PL
+Changes
 lib/Bot/Cobalt/Plugin/RSS.pm
 lib/Bot/Cobalt/Plugin/RSS/Conf.pm
 Makefile.PL
