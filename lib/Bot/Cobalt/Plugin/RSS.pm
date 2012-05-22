@@ -377,6 +377,14 @@ Uses L<XML::RSS::Feed> to track and parse feeds.
 
 =head1 EXAMPLE CONF
 
+An example configuration file can be installed via the L<Bot::Cobalt> 
+tool C<cobalt2-plugin-installcf>:
+
+  $ cobalt2-plugin-installcf --plugin="Bot::Cobalt::Plugin::RSS" \
+      --dest="cobalt2/etc/plugins/rss.conf"
+
+If you'd rather write one manually, t might look something like this:
+
   ---
   ## example etc/plugins/rss.conf
   Feeds:

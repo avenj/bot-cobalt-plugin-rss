@@ -6,24 +6,24 @@ build_requires: {}
 configure_requires:
   Module::Build: 0.38
 dynamic_config: 1
-generated_by: 'Module::Build version 0.38, CPAN::Meta::Converter version 2.112150'
+generated_by: 'Module::Build version 0.38, CPAN::Meta::Converter version 2.120921'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
   version: 1.4
-name: Cobalt-Plugin-RSS
+name: Bot-Cobalt-Plugin-RSS
 provides:
-  Cobalt::Plugin::RSS:
-    file: lib/Cobalt/Plugin/RSS.pm
-    version: 0.093
-  Cobalt::Plugin::RSS::Conf:
-    file: lib/Cobalt/Plugin/RSS/Conf.pm
-    version: 0.1
+  Bot::Cobalt::Plugin::RSS:
+    file: lib/Bot/Cobalt/Plugin/RSS.pm
+    version: 0.001
+  Bot::Cobalt::Plugin::RSS::Conf:
+    file: lib/Bot/Cobalt/Plugin/RSS/Conf.pm
+    version: 0
 requires:
-  Cobalt::Core: 0
+  Bot::Cobalt::Core: 0
   File::Spec: 0
   XML::RSS::Feed: 0
-  perl: v5.12.1
+  perl: v5.10.1
 resources:
   license: http://dev.perl.org/licenses/
-version: 0.093
+version: 0.001
