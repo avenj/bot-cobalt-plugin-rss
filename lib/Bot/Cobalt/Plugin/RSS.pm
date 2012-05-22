@@ -12,6 +12,7 @@ use XML::RSS::Feed;
 
 sub new {
   my $class = shift;
+
   my $self  = {
     MSGTIMERS => {},
     HEAP => {
@@ -20,8 +21,8 @@ sub new {
       FEEDS => {},
     },
   };
-  bless $self, $class;
-  
+
+  bless $self, $class;  
   return $self
 }
 
@@ -366,6 +367,8 @@ Bot::Cobalt::Plugin::RSS - Monitor RSS feeds via IRC
   !plugin load RSS
 
 =head1 DESCRIPTION
+
+A L<Bot::Cobalt> plugin.
 
 Monitors an arbitrary number of RSS feeds, reporting new headlines to
 configured contexts/channels.
