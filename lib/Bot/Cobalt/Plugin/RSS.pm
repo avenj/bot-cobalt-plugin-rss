@@ -1,7 +1,7 @@
 package Bot::Cobalt::Plugin::RSS;
-our $VERSION = '0.001';
+our $VERSION = '0.002_01';
 
-use 5.10.1;
+use 5.12.1;
 
 use Bot::Cobalt;
 use Bot::Cobalt::Common;
