@@ -235,7 +235,9 @@ sub Bot_rssplug_got_resp {
                    || return PLUGIN_EAT_NONE;
     my $handler  = $feedmeta->{obj};
     
-    if ( $handler->parse($response->content) ) {
+    ## XML::Parser throws some noisy warnings.
+    ## We can't do anything about them anyway, so silence them.
+    if ( eval { $handler->parse($response->content) } ) {
       $self->_send_announce($feedname, $handler);
     }
   } else {
@@ -261,7 +263,7 @@ sub _send_announce {
     $feedmeta->{hasrun} = 1;
     $handler->init_headlines_seen(1);
     ## for some reason init_headlines_seen sometimes fails ...
-    () = $handler->late_breaking_news;
+    $handler->late_breaking_news;
     return
   }
 
