@@ -1,6 +1,7 @@
 #!/usr/bin/env perl
 use strict; use warnings;
 use Module::Build;
+
 my $build = Module::Build->new(
   module_name => "Bot::Cobalt::Plugin::RSS",
   dist_abstract => "RSS feed monitor for Bot::Cobalt",
