@@ -1,5 +1,5 @@
 package Bot::Cobalt::Plugin::RSS;
-our $VERSION = '0.002_01';
+our $VERSION = '0.002';
 
 use 5.12.1;
 
@@ -139,7 +139,7 @@ sub Cobalt_register {
         my $thiscont = $annto->{$context};
         unless (ref $thiscont eq 'ARRAY') {
           logger->warn(
-            "Configured AnnounceTo directive not a list.",
+            "Configured AnnounceTo directive for $context not a list.",
             "Check your configuration."
           );
           next CONTEXT
@@ -235,9 +235,8 @@ sub Bot_rssplug_got_resp {
                    || return PLUGIN_EAT_NONE;
     my $handler  = $feedmeta->{obj};
     
-    ## XML::Parser throws some noisy warnings.
-    ## We can't do anything about them anyway, so silence them.
-    if ( eval { $handler->parse($response->content) } ) {
+    local $SIG{__WARN__} = sub {};
+    if ( eval { $handler->parse($response->content); 1 } ) {
       $self->_send_announce($feedname, $handler);
     }
   } else {
