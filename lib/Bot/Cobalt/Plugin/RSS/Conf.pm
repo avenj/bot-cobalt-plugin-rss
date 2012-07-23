@@ -2,6 +2,8 @@ package Bot::Cobalt::Plugin::RSS::Conf;
 
 sub conf { local $/; my $cf = <DATA>; return $cf }
 
+1
+
 __DATA__
 ---
 ## Bot::Cobalt::Plugin::RSS plugin configuration

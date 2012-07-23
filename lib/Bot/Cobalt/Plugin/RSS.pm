@@ -26,7 +26,6 @@ sub new {
   return $self
 }
 
-
 sub pending {  $_[0]->{HEAP}->{POOL} }
 
 sub announce {
@@ -384,7 +383,7 @@ tool C<cobalt2-plugin-installcf>:
   $ cobalt2-plugin-installcf --plugin="Bot::Cobalt::Plugin::RSS" \
       --dest="cobalt2/etc/plugins/rss.conf"
 
-If you'd rather write one manually, t might look something like this:
+If you'd rather write one manually, it might look something like this:
 
   ---
   ## example etc/plugins/rss.conf
@@ -399,13 +398,11 @@ If you'd rather write one manually, t might look something like this:
           - '#eris'
           - '#otw'
 
-        ParadoxIRC:
+        AlphaChat:
           - '#perl'
 
 =head1 AUTHOR
 
 Jon Portnoy <avenj@cobaltirc.org>
-
-L<http://www.cobaltirc.org>
 
 =cut
