@@ -1,5 +1,4 @@
 package Bot::Cobalt::Plugin::RSS;
-our $VERSION = '0.002';
 
 use 5.12.1;
 
@@ -170,7 +169,7 @@ sub Cobalt_register {
   );
   
   my $count = $self->list_feed_names;
-  logger->info("Loaded - $VERSION - watching $count feeds");  
+  logger->info("Loaded; watching $count feeds");  
   
   return PLUGIN_EAT_NONE
 }
@@ -234,10 +233,14 @@ sub Bot_rssplug_got_resp {
                    || return PLUGIN_EAT_NONE;
     my $handler  = $feedmeta->{obj};
     
-    local $SIG{__WARN__} = sub {};
-    if ( eval { $handler->parse($response->content); 1 } ) {
-      $self->_send_announce($feedname, $handler);
+    { local $SIG{__WARN__} = sub {};
+      if ( eval { $handler->parse($response->content); 1 } ) {
+        $self->_send_announce($feedname, $handler);
+      } else {
+        logger->warn("parse() failure for $feedname");
+      }
     }
+
   } else {
     logger->warn(
       "Unsuccessful HTTP request: $feedname: ".$response->status
